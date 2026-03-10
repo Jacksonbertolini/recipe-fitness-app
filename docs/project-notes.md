@@ -185,3 +185,43 @@ Browse → Recipe Detail → Save to Favorites → View Favorites
 - Use JWT tokens in Authorization: Bearer <token> header
 - Middleware verifies token and attaches user_id to request
 - Password hashing with bcrypt
+
+## GitHub Issues Created (Lesson 5)
+
+**Total: 15 issues**
+
+View all issues: https://github.com/Jacksonbertolini/recipe-fitness-app/issues
+
+### Database (Issues #1-2)
+- #1: MySQL schema migration - all 5 tables
+- #2: Seed 20+ recipes with nutrition data
+
+### Backend - Auth (Issues #3-4)
+- #3: Register + Login endpoints (bcrypt, JWT)
+- #4: JWT middleware for protected routes
+
+### Backend - Recipes & Features (Issues #5-8)
+- #5: GET /api/recipes - filter + search + is_favorited
+- #6: GET /api/recipes/:id - full details
+- #7: GET /api/user/profile + PUT /api/user/goal
+- #8: GET/POST/DELETE /api/favorites - CRUD
+
+### Frontend - Auth & Shell (Issues #9-11)
+- #9: AuthContext + Login/Register pages
+- #10: Navbar with conditional links
+- #11: Home page with goal buttons
+
+### Frontend - Feature Pages (Issues #12-15)
+- #12: Browse page - filter + search + RecipeCard
+- #13: Recipe Detail page - ingredients, steps, nutrition
+- #14: Profile page - set goal, protected route
+- #15: Favorites page - saved recipes, protected route
+
+## Implementation Workflow
+
+1. Pick an issue from GitHub
+2. Create a branch: `git checkout -b issue-#`
+3. Work on the task
+4. Commit with: `git commit -m "Description (fixes #issue-number)"`
+5. Push and create PR
+6. Close issue when done
