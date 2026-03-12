@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify project structure
+        run: |
+          echo "Checking project structure..."
+          ls -la
+          echo "Frontend folder:"
+          ls frontend/
+          echo "Backend folder:"
+          ls backend/
+          echo "Docs folder:"
+          ls docs/
+
+      - name: Validate docs exist
+        run: |
+          test -f docs/project-proposal.md && echo "project-proposal.md OK"
+          test -f docs/architecture.md && echo "architecture.md OK"
+          test -f docs/database-schema.md && echo "database-schema.md OK"
+
+      - name: Build check passed
+        run: echo "FitMeals CI passed successfully!"
