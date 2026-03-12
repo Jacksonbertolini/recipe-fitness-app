@@ -206,6 +206,7 @@ See `docs/database-schema.md` for complete SQL schema and design decisions.
 
 **[Your Name]**
 Web Development - Module 4 Project
+Spring 2026
 [Your College/University]
 [Semester/Year]
 
