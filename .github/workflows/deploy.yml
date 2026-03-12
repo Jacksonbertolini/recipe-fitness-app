@@ -65,6 +65,9 @@ jobs:
           scp -i ~/.ssh/id_rsa backend/main.go $SSH_USER@$SSH_HOST:/tmp/main.go
           ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "cd /tmp && go build -o fitmeals-backend main.go && sudo mv fitmeals-backend /usr/local/bin/fitmeals-backend && sudo chmod +x /usr/local/bin/fitmeals-backend"
 
-      - name: Restart backend service
+      - name: Deploy service file and restart backend
         run: |
-          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "sudo systemctl restart fitmeals-backend && sudo systemctl status fitmeals-backend"
+          scp -i ~/.ssh/id_rsa backend/fitmeals.service $SSH_USER@$SSH_HOST:/tmp/fitmeals.service
+          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "sudo mv /tmp/fitmeals.service /etc/systemd/system/fitmeals-backend.service && sudo systemctl daemon-reload && sudo systemctl enable fitmeals-backend && sudo systemctl restart fitmeals-backend"
+          sleep 3
+          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "sudo systemctl is-active fitmeals-backend"
