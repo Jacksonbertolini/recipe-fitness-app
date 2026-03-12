@@ -43,34 +43,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Build Go binary
-        run: |
-          cd backend
-          GOOS=linux GOARCH=amd64 go build -o fitmeals-backend main.go
-
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Copy frontend to server
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mkdir -p /var/www/recipe-app"
-          scp frontend/index.html ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/index.html
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mv /tmp/index.html /var/www/recipe-app/index.html"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mkdir -p /var/www/recipe-app"
+          scp -i ~/.ssh/id_rsa frontend/index.html ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/index.html
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mv /tmp/index.html /var/www/recipe-app/index.html"
 
-      - name: Copy Go binary to server
+      - name: Copy and build backend on server
         run: |
-          scp backend/fitmeals-backend ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/fitmeals-backend
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mv /tmp/fitmeals-backend /usr/local/bin/fitmeals-backend && sudo chmod +x /usr/local/bin/fitmeals-backend"
+          scp -i ~/.ssh/id_rsa backend/main.go ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/main.go
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /tmp && go build -o fitmeals-backend main.go && sudo mv fitmeals-backend /usr/local/bin/fitmeals-backend && sudo chmod +x /usr/local/bin/fitmeals-backend"
 
       - name: Restart backend service
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo systemctl restart fitmeals-backend && sudo systemctl status fitmeals-backend"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo systemctl restart fitmeals-backend && sudo systemctl status fitmeals-backend"
