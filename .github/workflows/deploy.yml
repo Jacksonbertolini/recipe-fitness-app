@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -33,3 +33,44 @@ jobs:
 
       - name: Build check passed
         run: echo "FitMeals CI passed successfully!"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build Go binary
+        run: |
+          cd backend
+          GOOS=linux GOARCH=amd64 go build -o fitmeals-backend main.go
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy frontend to server
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mkdir -p /var/www/recipe-app"
+          scp frontend/index.html ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/index.html
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mv /tmp/index.html /var/www/recipe-app/index.html"
+
+      - name: Copy Go binary to server
+        run: |
+          scp backend/fitmeals-backend ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/fitmeals-backend
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mv /tmp/fitmeals-backend /usr/local/bin/fitmeals-backend && sudo chmod +x /usr/local/bin/fitmeals-backend"
+
+      - name: Restart backend service
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo systemctl restart fitmeals-backend && sudo systemctl status fitmeals-backend"

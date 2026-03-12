@@ -1,0 +1,13 @@
+[Unit]
+Description=FitMeals Backend API
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+ExecStart=/usr/local/bin/fitmeals-backend
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
