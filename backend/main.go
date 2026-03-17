@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fitmeals/database"
 	"fitmeals/handlers"
 	"fitmeals/middleware"
 	"log"
@@ -9,6 +10,8 @@ import (
 )
 
 func main() {
+	database.Open()
+
 	r := gin.Default()
 
 	// Health check
