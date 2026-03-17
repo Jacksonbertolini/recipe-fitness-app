@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"fitmeals/middleware"
+	"fitmeals/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type RegisterRequest struct {
@@ -38,9 +41,30 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// TODO: check for duplicate email, hash password, insert user into DB
-	mockUserID := 1
-	token, err := generateToken(mockUserID)
+	// Reject duplicate email
+	existing, err := models.GetUserByEmail(req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+	if existing != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "email already registered"})
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not hash password"})
+		return
+	}
+
+	userID, err := models.CreateUser(req.Name, strings.ToLower(req.Email), string(hash))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create user"})
+		return
+	}
+
+	token, err := generateToken(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
 		return
@@ -49,9 +73,9 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"token": token,
 		"user": gin.H{
-			"id":    mockUserID,
+			"id":    userID,
 			"name":  req.Name,
-			"email": req.Email,
+			"email": strings.ToLower(req.Email),
 		},
 	})
 }
@@ -64,9 +88,22 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// TODO: look up user by email, verify bcrypt password
-	mockUserID := 1
-	token, err := generateToken(mockUserID)
+	user, err := models.GetUserByEmail(strings.ToLower(req.Email))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+		return
+	}
+
+	token, err := generateToken(user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
 		return
@@ -75,9 +112,9 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"token": token,
 		"user": gin.H{
-			"id":    mockUserID,
-			"name":  "Test User",
-			"email": req.Email,
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
 		},
 	})
 }

@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"fitmeals/models"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,15 +17,27 @@ type UpdateGoalRequest struct {
 func GetProfile(c *gin.Context) {
 	userID := c.GetInt("user_id")
 
-	// TODO: query users + user_goals tables by userID
+	user, err := models.GetUserByID(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	goal, err := models.GetUserGoal(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"id":    userID,
-		"name":  "Test User",
-		"email": "test@example.com",
-		"goal": gin.H{
-			"goal_type":       "weight_gain",
-			"target_calories": 2800,
-		},
+		"id":    user.ID,
+		"name":  user.Name,
+		"email": user.Email,
+		"goal":  goal, // nil when not set yet — frontend handles this
 	})
 }
 
@@ -37,7 +51,10 @@ func UpdateGoal(c *gin.Context) {
 		return
 	}
 
-	// TODO: upsert into user_goals table for userID
-	_ = userID
+	if err := models.UpsertUserGoal(userID, req.GoalType, req.TargetCalories); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update goal"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "goal updated successfully"})
 }
