@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo:*)",
+      "Bash(gh label:*)",
+      "Bash(gh issue:*)",
+      "Bash(git add:*)",
+      "Bash(mkdir -p /c/Users/jpimp/Documents/recipe-fitness-app/.github/workflows && mkdir -p /c/Users/jpimp/Documents/recipe-fitness-app/frontend && mkdir -p /c/Users/jpimp/Documents/recipe-fitness-app/backend)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cd /c/Users/jpimp/Documents/recipe-fitness-app/backend && go mod tidy 2>&1)",
+      "Bash(where go:*)"
+    ]
+  }
+}
