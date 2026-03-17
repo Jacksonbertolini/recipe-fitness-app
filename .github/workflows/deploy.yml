@@ -62,8 +62,9 @@ jobs:
 
       - name: Copy and build backend on server
         run: |
-          scp -i ~/.ssh/id_rsa backend/main.go $SSH_USER@$SSH_HOST:/tmp/main.go
-          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "cd /tmp && go build -o fitmeals-backend main.go && sudo mv fitmeals-backend /usr/local/bin/fitmeals-backend && sudo chmod +x /usr/local/bin/fitmeals-backend"
+          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "mkdir -p ~/fitmeals-backend"
+          rsync -av --delete -e "ssh -i ~/.ssh/id_rsa" backend/ $SSH_USER@$SSH_HOST:~/fitmeals-backend/
+          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "cd ~/fitmeals-backend && go mod tidy && go build -o fitmeals-backend . && sudo mv fitmeals-backend /usr/local/bin/fitmeals-backend && sudo chmod +x /usr/local/bin/fitmeals-backend"
 
       - name: Deploy service file and restart backend
         run: |
