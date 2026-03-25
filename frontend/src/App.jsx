@@ -9,7 +9,7 @@ import RegisterPage from './pages/RegisterPage'
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/recipe-app">
         <Navbar />
         <Routes>
           <Route path="/" element={<RecipesPage />} />
