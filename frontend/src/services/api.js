@@ -18,7 +18,7 @@ export const authAPI = {
 }
 
 export const recipesAPI = {
-  list: (goalType) => api.get('/recipes', { params: goalType ? { goal_type: goalType } : {} }),
+  list: (goalType) => api.get('/recipes', { params: goalType ? { goal: goalType } : {} }),
   get: (id) => api.get(`/recipes/${id}`),
 }
 
